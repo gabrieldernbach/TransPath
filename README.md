@@ -2,6 +2,8 @@ Fork of ctranspath, packaged as an embedding service
 
 Build and run container
 `docker build -t ctranspath . && docker run -p 8000:8000 ctranspath`
+or pull pre-build
+`docker run -p 8000:8000 gabrieldernbach/histo:cstranspath`
 
 You can now talk to ctranspath, e.g.
 ```python3
