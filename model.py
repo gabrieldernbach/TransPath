@@ -1,8 +1,8 @@
 import timm
-from torchvision import transforms
 import torch
 from timm.models.layers.helpers import to_2tuple
 from torch import nn as nn
+from torchvision import transforms
 
 
 class ConvStem(nn.Module):
@@ -57,6 +57,7 @@ def load_model():
     model.load_state_dict(td['model'], strict=True)
     return model
 
+
 def load_preprocessor():
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
@@ -68,6 +69,7 @@ def load_preprocessor():
         ]
     )
     return preprocessor
+
 
 def load_model_and_preprocessor():
     return load_model(), load_preprocessor()
