@@ -8,30 +8,26 @@ or pull pre-build
 
 You can now talk to ctranspath, e.g.
 ```python3
-import base64
-from io import BytesIO
+import io
 
+import numpy as np
 import requests
 from PIL import Image
 from skimage.data import immunohistochemistry
-from tqdm.contrib.concurrent import thread_map
 
-def encode_image(image: Image) -> str:
-    """Converts an image to a base64-encoded JPEG string."""
-    buffer = BytesIO()
-    image.save(buffer, format='JPEG')
-    return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-def request_image_embeddings(images: [Image]) -> list:
-    """Posts a list of images to an embedding service and returns the embeddings."""
-    data = {'images': [encode_image(i) for i in images]}
-    response = requests.post('http://localhost:8000/embed_images', json=data)
-    return response.json()['vectors']
+def img2byte(img):
+    buffer = io.BytesIO()
+    img.save(buffer, format="JPEG")
+    return buffer.getvalue()
 
-# Prepare example image and replicate it for multiple requests
-sample_image = Image.fromarray(immunohistochemistry())
-image_batch = [sample_image] * 4
 
-# Use concurrent threads to request embeddings for multiple batches
-embeddings = thread_map(request_image_embeddings, [image_batch] * 4)
+def embeddings(imgs):
+    uri = 'http://localhost:8000/embed_images'
+    files = [("images", img2byte(img)) for img in imgs]
+    response = requests.post(uri, files=files)
+    return np.array(response.json())
+
+sample_image = Image.fromarray(immunohistochemistry()).resize((224, 224))
+embeddings([sample_image] * 5)
 ```
