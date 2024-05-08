@@ -9,6 +9,7 @@ or pull pre-build
 You can now talk to ctranspath, e.g.
 ```python3
 import io
+from concurrent.futures.thread import ThreadPoolExecutor
 
 import numpy as np
 import requests
@@ -22,12 +23,23 @@ def img2byte(img):
     return buffer.getvalue()
 
 
-def embeddings(imgs):
-    uri = 'http://localhost:8000/embed_images'
-    files = [("images", img2byte(img)) for img in imgs]
-    response = requests.post(uri, files=files)
-    return np.array(response.json())
+def embedding(img):
+    response = requests.post(
+        url='http://localhost:8000/embed_image',
+        data=img2byte(img)
+    )
+    if response.status_code == 200:
+        return np.load(io.BytesIO(response.content))
+    else:
+        raise Exception(f"Failed to get embedding: {response.text}")
 
-sample_image = Image.fromarray(immunohistochemistry()).resize((224, 224))
-embeddings([sample_image] * 5)
+
+def threadmap(fun, xs):
+    with ThreadPoolExecutor() as pool:
+        return pool.map(fun, xs)
+
+
+image = Image.fromarray(immunohistochemistry()).resize((224, 224))
+embedding(image)
+threadmap(embedding, [image] * 16))
 ```
