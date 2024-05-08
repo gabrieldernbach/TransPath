@@ -9,7 +9,7 @@ RUN pip install timm-0.5.4.tar && rm timm-0.5.4.tar
 WORKDIR /app
 RUN gdown https://drive.google.com/file/d/1DoDx_70_TLj98gTf6YTXnu4tFhsFocDX/view?usp=sharing --fuzzy -O /app/ctranspath.pth
 
-COPY app /app
 EXPOSE 8000
 RUN pip install fastapi uvicorn python-multipart
+COPY app /app
 CMD ["python", "app.py"]
