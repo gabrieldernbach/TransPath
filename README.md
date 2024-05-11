@@ -9,6 +9,7 @@ or pull pre-build
 You can now talk to ctranspath, e.g.
 ```python3
 import io
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import numpy as np
@@ -22,17 +23,13 @@ def img2byte(img):
     img.save(buffer, format="JPEG")
     return buffer.getvalue()
 
-
+@retry(stop=stop_after_attempt(20), wait=wait_random_exponential(multiplier=0.5, max=240))
 def embedding(img):
     response = requests.post(
         url='http://localhost:8000/embed_image',
         data=img2byte(img)
     )
-    if response.status_code == 200:
-        return np.load(io.BytesIO(response.content))
-    else:
-        raise Exception(f"Failed to get embedding: {response.text}")
-
+    return np.load(io.BytesIO(response.content))
 
 def threadmap(fun, xs):
     with ThreadPoolExecutor() as pool:
