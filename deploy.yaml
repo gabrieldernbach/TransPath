@@ -1,0 +1,81 @@
+# Example kubernetes deployment in GCP
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctranspath-embedder
+  labels:
+    proj: ???
+    user: ???
+    owner: ???
+spec:
+  replicas: 16
+  selector:
+    matchLabels:
+      app: ctranspath-embedder
+  template:
+    metadata:
+      labels:
+        app: ctranspath-embedder
+    spec:
+      # serviceAccountName: ??? # Extending permissions may be helpful during debugging
+      nodeSelector:
+        cloud.google.com/gke-spot: "true"
+      tolerations:
+        - effect: NoSchedule
+          key: nvidia.com/gpu
+          operator: Exists
+        - effect: NoSchedule
+          key: node_type
+          value: gpu-1-t4
+          operator: Equal
+        - effect: NoSchedule
+          key: disk_size
+          value: 100g
+          operator: Equal
+        - effect: NoSchedule
+          key: provisioning_model
+          value: spot
+          operator: Equal      containers:
+      - name: embedder
+        image: "gabrieldernbach/histo:ctranspath"
+        # tty: true  # Allocate a TTY for debugging
+        # stdin: true # Allow terminal input for debugging
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            cpu: 7
+            memory: 26G
+          limits:
+            cpu: 8
+            memory: 32G
+        env:
+          - name: NUM_CORES
+            value: "8"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ctranspath-embedder-service
+spec:
+  type: ClusterIP
+  selector:
+    app: ctranspath-embedder
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: image-embedder-hpa
+  namespace: ???
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: image-embedder
+  minReplicas: 1
+  maxReplicas: 32
+  targetCPUUtilizationPercentage: 20
