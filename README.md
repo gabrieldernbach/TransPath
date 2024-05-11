@@ -40,3 +40,11 @@ image = Image.fromarray(immunohistochemistry()).resize((224, 224))
 embedding(image)
 threadmap(embedding, [image] * 16))
 ```
+
+
+
+---
+
+Can be deployed distributedly in kubernetes, use
+`kubectl apply -f deployment.yaml`
+listens to requetsts on `http://ctranspath-embedder-service:8000/embed_image`
